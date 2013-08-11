@@ -17,6 +17,8 @@ class SiriProxy::Plugin::Hdmi  < SiriProxy::Plugin
     @aRooms   = config["roomHash"]
     @aSources = config["sourceHash"]
     @deviceIp = config["ip"]
+	@aSourceApp = config["sourceApp"]
+	@baseUrl	= config["baseUrl"]
 
   end
 
@@ -40,6 +42,12 @@ class SiriProxy::Plugin::Hdmi  < SiriProxy::Plugin
       `echo #{cmd} | nc #{@deviceIp} 4999`
       sleep 0.5
     end
+	
+	# Launch an App if defined
+	if @aSourceApp.has_key?(source)
+		launch(source, @baseUrl, @aSourceApp[source])
+	end
+
     request_completed #always complete your request! Otherwise the phone will "spin" at the user!
   end
 
@@ -57,6 +65,11 @@ class SiriProxy::Plugin::Hdmi  < SiriProxy::Plugin
     puts cmd
 
     `echo #{cmd} | nc #{@deviceIp} 4999`
+	# Launch an App if defined
+
+	if @aSourceApp.has_key?(source)
+		launch(source, @baseUrl, @aSourceApp[source])
+	end
 
     request_completed #always complete your request! Otherwise the phone will "spin" at the user!
   end
@@ -75,7 +88,30 @@ class SiriProxy::Plugin::Hdmi  < SiriProxy::Plugin
 	end
 
   end
-  
-  
 
 end
+
+
+####
+#### For auto launching an Application
+class OpenLink < SiriObject
+	def initialize(ref="")
+		super("OpenLink", "com.apple.ace.assistant")
+		self.ref = ref
+	end
+end
+
+def launch(appName, baseUrl, appUrl)
+ 
+	# Create a URL redirect file to launch App in current host's Apache dir (must be writable by siriproxy user!)
+  	File.open("/var/www/" + appName + ".html", "w") do |file|
+		file.puts "<html><head><title>IU Webmaster redirect</title> <META http-equiv='refresh' content='0;URL=#{appUrl}'> </head> </html>" 
+	end
+
+	fullUrl = baseUrl + appName + '.html'
+	add_property_to_class(OpenLink, :ref)
+	sleep (4)
+	view = OpenLink.new(fullUrl.gsub("//",""))
+	send_object view
+end
+
