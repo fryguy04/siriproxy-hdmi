@@ -1,0 +1,5 @@
+    - name: 'Hdmi'
+      path: '~/plugins/siriproxy-hdmi'
+      deviceHash:  { 'TiVo': 1, 'DVD': 2, 'Apple': 3, 'PC': 4}
+      roomHash:    { 'family room': 1, 'kitchen': 2, 'bedroom': 3, 'basement': 4}
+
